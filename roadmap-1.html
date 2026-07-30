@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>roadmap.sh — trilha backend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#191a21;
+    --panel:#22232d;
+    --line:#383a4a;
+    --fg:#f2f2f0;
+    --dim:#6f7390;
+    --green:#50fa7b;
+    --purple:#bd93f9;
+    --orange:#ffb86c;
+    --pink:#ff79c6;
+    --cyan:#8be9fd;
+    --red:#ff5555;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -5%, rgba(80,250,123,0.06), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 20%, rgba(189,147,249,0.06), transparent 60%),
+      var(--bg);
+    color:var(--fg);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    padding:48px 20px 100px;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+
+  /* ===== window chrome ===== */
+  .term{
+    max-width:840px;
+    margin:0 auto;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,0.6);
+  }
+  .term-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 16px;
+    background:#1c1d26;
+    border-bottom:1px solid var(--line);
+  }
+  .dot{width:11px; height:11px; border-radius:50%;}
+  .dot.r{background:#ff5f56;}
+  .dot.y{background:#ffbd2e;}
+  .dot.g{background:#27c93f;}
+  .term-title{
+    margin-left:auto; margin-right:auto;
+    font-size:12.5px; color:var(--dim);
+    font-family:'JetBrains Mono', monospace;
+    transform:translateX(-16px);
+  }
+
+  .term-body{padding:34px 36px 40px;}
+
+  .prompt-line{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13.5px;
+    color:var(--dim);
+    margin-bottom:6px;
+  }
+  .prompt-line .p{color:var(--green);}
+  .prompt-line .cmd{color:var(--fg);}
+
+  h1{
+    font-family:'JetBrains Mono', monospace;
+    font-size:clamp(20px, 3.4vw, 27px);
+    font-weight:800;
+    letter-spacing:-0.02em;
+    color:var(--fg);
+    margin:2px 0 6px;
+  }
+  h1 span{color:var(--green);}
+  .subtitle{
+    color:var(--dim);
+    font-size:14.5px;
+    margin-bottom:8px;
+    max-width:60ch;
+  }
+  .legend{
+    display:flex; gap:18px; flex-wrap:wrap;
+    margin:22px 0 8px;
+    font-size:12px;
+    font-family:'JetBrains Mono', monospace;
+    color:var(--dim);
+  }
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .legend i{width:9px; height:9px; border-radius:50%; display:inline-block;}
+
+  /* ===== git graph ===== */
+  .graph{
+    position:relative;
+    margin-top:28px;
+    padding-left:34px;
+  }
+  .graph::before{
+    content:"";
+    position:absolute;
+    left:9px; top:6px; bottom:6px;
+    width:2px;
+    background:linear-gradient(var(--line), var(--line) 60%, transparent);
+    background-image:repeating-linear-gradient(to bottom, var(--line) 0 6px, transparent 6px 12px);
+  }
+  .commit{
+    position:relative;
+    padding-bottom:30px;
+  }
+  .commit:last-child{padding-bottom:0;}
+  .node{
+    position:absolute;
+    left:-34px; top:2px;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:var(--panel);
+    border:2px solid var(--dim);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    font-weight:700;
+    color:var(--dim);
+    z-index:2;
+  }
+  .commit.now .node{
+    border-color:var(--green);
+    color:var(--green);
+    box-shadow:0 0 0 5px rgba(80,250,123,0.12);
+  }
+  .commit.done .node{
+    border-color:var(--purple);
+    background:var(--purple);
+    color:#191a21;
+  }
+
+  .card{
+    background:#1e1f29;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:16px 18px;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .commit.now .card{border-color:rgba(80,250,123,0.35);}
+  .card:hover{border-color:var(--dim); transform:translateX(2px);}
+
+  .card-head{
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+    margin-bottom:6px;
+  }
+  .hash{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--orange);
+  }
+  .card-title{
+    font-family:'JetBrains Mono', monospace;
+    font-weight:700;
+    font-size:15.5px;
+    color:var(--fg);
+  }
+  .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    padding:2px 7px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    color:var(--dim);
+    margin-left:auto;
+  }
+  .commit.now .tag{color:var(--green); border-color:rgba(80,250,123,0.4);}
+
+  .card-desc{
+    font-size:13.5px;
+    color:#c7c9d9;
+    line-height:1.55;
+    margin-bottom:10px;
+  }
+  .chips{display:flex; flex-wrap:wrap; gap:6px;}
+  .chip{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    padding:3px 9px;
+    border-radius:5px;
+    background:#191a21;
+    border:1px solid var(--line);
+    color:var(--cyan);
+  }
+  .note{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--dim);
+    border-left:2px solid var(--purple);
+    padding-left:10px;
+    line-height:1.5;
+  }
+  .note b{color:var(--purple); font-weight:600;}
+
+  footer{
+    max-width:840px;
+    margin:26px auto 0;
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--dim);
+    text-align:center;
+  }
+
+  @media (max-width:560px){
+    .term-body{padding:26px 18px 32px;}
+    .graph{padding-left:28px;}
+    .node{left:-28px; width:16px; height:16px; font-size:9px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="term">
+  <div class="term-bar">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="term-title">willian@backend-track: ~/roadmap</span>
+  </div>
+
+  <div class="term-body">
+    <div class="prompt-line"><span class="p">➜</span> <span class="cmd">git log --oneline --graph --reverse</span></div>
+    <h1>Trilha <span>Front-end → Back-end</span></h1>
+    <p class="subtitle">Ordem sugerida a partir do que você já sabe (HTML/CSS avançado, JS em andamento, terminal, Git, Docker). Cada commit é liberado quando o anterior está sólido — sem pular etapa.</p>
+
+    <div class="legend">
+      <span><i style="background:var(--purple)"></i> já dominado por você</span>
+      <span><i style="background:var(--green)"></i> próximo passo</span>
+      <span><i style="background:transparent;border:2px solid var(--dim)"></i> na fila</span>
+    </div>
+
+    <div class="graph">
+
+      <div class="commit done">
+        <div class="node">✓</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">a1e4f2c</span>
+            <span class="card-title">fundamentos web</span>
+            <span class="tag">base</span>
+          </div>
+          <div class="card-desc">HTML semântico, CSS avançado (Grid/Flexbox), terminal, Linux/Windows, Git &amp; GitHub, Docker básico, VS Code.</div>
+          <div class="chips">
+            <span class="chip">HTML5</span><span class="chip">CSS3</span><span class="chip">bash</span><span class="chip">git</span><span class="chip">docker</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit now">
+        <div class="node">›</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">f7b0d91</span>
+            <span class="card-title">JavaScript — fechar o núcleo</span>
+            <span class="tag">você está aqui</span>
+          </div>
+          <div class="card-desc">DOM e eventos, ES6+ (arrow functions, destructuring, spread/rest), array methods (map/filter/reduce), assincronismo (Promises, async/await) e fetch API. Isso é o alicerce de front <b>e</b> back.</div>
+          <div class="chips">
+            <span class="chip">JS ES6+</span><span class="chip">DOM</span><span class="chip">async/await</span><span class="chip">fetch</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <div class="node">2</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">c39a70e</span>
+            <span class="card-title">sua linguagem de back-end</span>
+          </div>
+          <div class="card-desc">Escolha uma trilha: <b>Node.js</b> (reaproveita o JS que você já tem, caminho mais rápido) ou <b>Python</b> (base mais ampla em lógica — curso do Gustavo Guanabara no Curso em Vídeo é excelente aqui). Não precisa das duas agora, escolha uma e vá fundo.</div>
+          <div class="chips">
+            <span class="chip">Node.js</span><span class="chip">ou</span><span class="chip">Python</span>
+          </div>
+          <div class="note"><b>decisão-chave:</b> essa é a etapa que define seu ritmo — Node é continuidade, Python é base mais sólida em lógica de programação.</div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <div class="node">3</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">d02e6a4</span>
+            <span class="card-title">Git aprofundado</span>
+          </div>
+          <div class="card-desc">Branches, merge, resolução de conflitos, pull requests, .gitignore, fluxo de trabalho colaborativo (git flow básico).</div>
+          <div class="chips">
+            <span class="chip">branching</span><span class="chip">merge</span><span class="chip">PRs</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <div class="node">4</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">91fc3b8</span>
+            <span class="card-title">HTTP &amp; APIs</span>
+          </div>
+          <div class="card-desc">Métodos HTTP, status codes, conceito REST. Primeiro <b>consumir</b> APIs (fetch/axios, testar no Postman ou Insomnia), depois <b>criar</b> a sua própria (Express no Node, ou FastAPI/Flask no Python).</div>
+          <div class="chips">
+            <span class="chip">REST</span><span class="chip">Postman</span><span class="chip">Insomnia</span><span class="chip">Express / FastAPI</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <div class="node">5</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">6ab1de5</span>
+            <span class="card-title">Banco de dados — MySQL</span>
+          </div>
+          <div class="card-desc">Modelagem de dados, SQL (SELECT, JOIN, WHERE, agregações), depois um ORM (Sequelize no Node, ou SQLAlchemy/Django ORM no Python) pra ligar o banco na sua API.</div>
+          <div class="chips">
+            <span class="chip">SQL</span><span class="chip">modelagem</span><span class="chip">ORM</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <div class="node">6</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">2f88c17</span>
+            <span class="card-title">TypeScript</span>
+          </div>
+          <div class="card-desc">JS com tipagem estática — só compensa depois que o JS puro já está redondo, porque você reaproveita 100% do que sabe e adiciona segurança por cima.</div>
+          <div class="chips">
+            <span class="chip">tipagem</span><span class="chip">interfaces</span><span class="chip">generics</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <div class="node">7</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">b501aa9</span>
+            <span class="card-title">Framework front-end — React</span>
+          </div>
+          <div class="card-desc">Priorize React antes de Angular: mais vagas no mercado BR, curva de entrada mais suave, comunidade maior. Angular fica pra depois, se quiser ampliar.</div>
+          <div class="chips">
+            <span class="chip">React</span><span class="chip">hooks</span><span class="chip">components</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <div class="node">8</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">e40f9c2</span>
+            <span class="card-title">Docker aplicado &amp; deploy</span>
+          </div>
+          <div class="card-desc">Containerizar sua própria API + banco, docker-compose, e subir um projeto real (Render, Railway, VPS). Fecha o ciclo full-stack com algo publicado no ar.</div>
+          <div class="chips">
+            <span class="chip">docker-compose</span><span class="chip">deploy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="commit">
+        <div class="node">9</div>
+        <div class="card">
+          <div class="card-head">
+            <span class="hash">7d2a0f3</span>
+            <span class="card-title">Angular (opcional)</span>
+            <span class="tag">extra</span>
+          </div>
+          <div class="card-desc">Se quiser ampliar depois de sólido em React — mais comum em empresas grandes/corporativas, estrutura mais rígida.</div>
+          <div class="chips">
+            <span class="chip">Angular</span><span class="chip">TypeScript</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer>git log --graph gerado em 25/07/2026 · próximo commit: JavaScript ES6+</footer>
+
+</body>
+</html>
